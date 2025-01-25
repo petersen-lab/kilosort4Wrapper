@@ -44,6 +44,62 @@ probeLetter = 'A'  # Optional
 generate_probe_json(basePath, probeLetter)
 ```
 
+## How to Use
+
+### **File Structure Preparation**
+```
+basepath/
+├── structure.oebin              # Open Ephys metadata
+└── concatenated_data.dat        # Binary data (all epochs merged)
+```
+
+*Note:* Use your preferred method (e.g., `preprocessOpenEphysData` in cellExplorer, custom script) to concatenate epoch files from `continuous/Neuropix-PXI-...` folders into one `concatenated_data.dat` in the basepath.
+
+### **MATLAB Processing Code**
+```matlab
+% 1. Set paths and load session
+basepath = '/path/to/your/basepath';
+[~, basename] = fileparts(basepath);
+session = loadSession(basepath, basename); 
+
+% 2. Load Open Ephys metadata (critical for chanCoords)
+session = loadOpenEphysSettingsFile(fullfile(basepath, 'structure.oebin'),...
+                                   session, 'probeLetter', 'A');
+
+% 3. Handle missing chanCoords
+if ~isfield(session.extracellular, 'chanCoords') || isempty(session.extracellular.chanCoords)
+    warning('Generating Neuropixels channel coordinates from first principles');
+end
+
+% 4. Save session file
+saveStruct(session);
+```
+*Requirements:* MATLAB with newest CellExplorer toolkit installed
+
+### **Python Processing Code**
+
+```python
+from kilosort4_loadmat import kilosort4Wrapper, generate_probe_json
+from pathlib import Path
+
+# Define paths
+basePath = Path("/path/to/your/basepath")
+dataPath = basePath / "concatenatedData.dat"
+
+# Optional: Generate probe config JSON
+generate_probe_json(basePath, probeLetter='A')  # Match probeLetter from MATLAB step
+
+# Run Kilosort 4
+kilosort4Wrapper(
+    basePath=basePath,
+    dataPath=dataPath,
+    tmin=0,          # Start time (seconds)
+    tmax=np.inf,     # End time (seconds; use np.inf for full duration)
+    probeLetter='A'  # Must match probe ID used earlier
+)
+```
+
+
 ### Helper Functions
 
 #### findAndLoadSessionMat
