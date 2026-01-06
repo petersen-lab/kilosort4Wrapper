@@ -151,4 +151,9 @@ def plotChannelMap(activeX, activeY, activeShanks, plotAllElectrodes=False):
     plt.ylabel('Y coordinate (µm)')
     plt.grid(True)
     plt.legend()
-    plt.show()
+    
+    # Make plot non-blocking and save to file
+    plt.ion()  # Turn on interactive mode
+    plt.show(block=False)  # Show without blocking
+    
+    plt.pause(0.1)  # Brief pause to ensure plot is rendered
